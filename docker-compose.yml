@@ -1,0 +1,60 @@
+# Single-node Elasticsearch for local development.
+# Security is off and the password is a placeholder -- this is a dev fixture,
+# not a deployment. Do not expose port 9200 beyond localhost.
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: research-agent-es
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=changeme
+      # Keep the JVM small enough to sit alongside everything else on a laptop.
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: research-agent-pg
+    environment:
+      - POSTGRES_USER=research
+      - POSTGRES_PASSWORD=changeme
+      - POSTGRES_DB=research_agent
+    ports:
+      # Non-default host ports: 5432/5433 and 6379 are commonly already taken.
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U research -d research_agent"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    container_name: research-agent-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  es-data:
+  pg-data:
+  redis-data:

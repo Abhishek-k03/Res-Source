@@ -1,0 +1,28 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.langgraph_api/
+
+# Local corpus -- keep the folder, ignore its contents.
+data/*
+!data/.gitkeep
+!data/README.md
+
+# fastembed downloads ONNX models here on first run.
+local_cache/
+
+# Local process logs from `uvicorn`/worker runs.
+.run/
+
+# Belt and braces: never commit any env file.
+.env
+.env.*
+!.env.example

@@ -1,0 +1,113 @@
+[project]
+name = "research-rag-agent"
+version = "0.1.0"
+description = "A RAG research agent built with LangChain and LangGraph: pluggable ingestion (files, arXiv, web), Elasticsearch retrieval, and Gemini-powered planning and synthesis."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "langgraph>=0.3.0",
+    "langchain>=0.3.0",
+    "langchain-core>=0.3.0",
+    "langchain-community>=0.3.0",
+    "langchain-text-splitters>=0.3.0",
+    # LLM providers
+    "langchain-groq>=0.2.0",
+    "langchain-google-genai>=2.0.0",
+    # Vector store
+    "langchain-elasticsearch>=0.3.0",
+    # Local, key-free embeddings
+    "fastembed>=0.4.0",
+    # Loaders
+    "pypdf>=5.0.0",
+    "arxiv>=2.1.0",
+    "pymupdf>=1.24.0",
+    "requests>=2.32.0",
+    "beautifulsoup4>=4.12.0",
+    "python-dotenv>=1.0.1",
+    # API, persistence, and job queue
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.29.0",
+    "redis>=5.0.0",
+    "pydantic-settings>=2.4.0",
+    "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+# Alternative embedding providers -- imported lazily, install only what you use.
+openai = ["langchain-openai>=0.2.0"]
+cohere = ["langchain-cohere>=0.3.0"]
+huggingface = ["langchain-huggingface>=0.1.0", "sentence-transformers>=3.0.0"]
+# Alternative chat model providers -- resolved lazily by init_chat_model.
+anthropic = ["langchain-anthropic>=0.3.0"]
+# Alternative vector stores -- also imported lazily.
+pinecone = ["langchain-pinecone>=0.2.0"]
+mongodb = ["langchain-mongodb>=0.2.0"]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+    "aiosqlite>=0.20.0",
+    "ruff>=0.6.1",
+    "mypy>=1.11.1",
+]
+
+[build-system]
+requires = ["setuptools>=73.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = [
+    "retrieval_graph",
+    "retrieval_graph.researcher_graph",
+    "ingest_graph",
+    "shared",
+    "api",
+    "api.routers",
+]
+
+[tool.setuptools.package-dir]
+"retrieval_graph" = "src/retrieval_graph"
+"retrieval_graph.researcher_graph" = "src/retrieval_graph/researcher_graph"
+"ingest_graph" = "src/ingest_graph"
+"shared" = "src/shared"
+"api" = "src/api"
+"api.routers" = "src/api/routers"
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
+[tool.ruff]
+lint.select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "D",    # pydocstyle
+    "D401", # First line should be in imperative mood
+    "T201", # no print
+    "UP",   # pyupgrade
+]
+lint.ignore = [
+    "UP006",
+    "UP007",
+    "UP035",
+    "D417",
+    "E501",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "UP"]
+"scripts/*" = ["T201"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+markers = [
+    "integration: tests that need a running Elasticsearch and/or a GOOGLE_API_KEY",
+]
+filterwarnings = ["ignore::DeprecationWarning"]

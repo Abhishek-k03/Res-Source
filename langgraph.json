@@ -1,0 +1,8 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "ingest": "./src/ingest_graph/graph.py:graph",
+    "research_agent": "./src/retrieval_graph/graph.py:graph"
+  },
+  "env": ".env"
+}
