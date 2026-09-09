@@ -568,3 +568,38 @@ async def test_source_and_thread_mutations_are_durable_immediately(
 
     await client.delete(f"/threads/{thread['id']}")
     assert (await client.get(f"/collections/{collection['id']}/threads")).json() == []
+
+
+# --- deployment configuration ----------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("given", "expected"),
+    [
+        ("postgres://u:p@h/db", "postgresql+asyncpg://u:p@h/db"),
+        ("postgresql://u:p@h/db", "postgresql+asyncpg://u:p@h/db"),
+        ("postgresql+asyncpg://u:p@h/db", "postgresql+asyncpg://u:p@h/db"),
+    ],
+)
+def test_hosted_postgres_urls_are_given_the_async_driver(given, expected):
+    from api.settings import Settings
+
+    assert Settings(database_url=given).database_url == expected
+
+
+def test_cors_origins_accept_a_comma_separated_list():
+    from api.settings import Settings
+
+    settings = Settings(cors_origins="https://a.vercel.app, http://localhost:3000")
+    assert settings.cors_origins == ["https://a.vercel.app", "http://localhost:3000"]
+
+
+def test_the_retriever_provider_reaches_the_graph():
+    from api import services
+    from api.models import Collection
+    from api.settings import get_settings
+
+    get_settings.cache_clear()
+    config = services.graph_config(Collection(slug="c", name="C", index_name="i"))
+    get_settings.cache_clear()
+    assert config["configurable"]["retriever_provider"] == "elastic-local"

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,7 +29,32 @@ class Settings(BaseSettings):
     job_stale_after_seconds: int = 900
     """A job left in `processing` for longer than this is treated as abandoned."""
 
+    retriever_provider: str = "elastic-local"
+    """Vector store backing retrieval. Managed Elasticsearch wants 'elastic'."""
+
     cors_origins: list[str] = ["http://localhost:3000"]
+
+    @field_validator("database_url")
+    @classmethod
+    def _async_driver(cls, value: str) -> str:
+        """Force the asyncpg driver.
+
+        Hosted Postgres hands out `postgresql://`, which SQLAlchemy resolves to
+        psycopg and then fails on, since the engine is async.
+        """
+        if value.startswith("postgres://"):
+            value = value.replace("postgres://", "postgresql://", 1)
+        if value.startswith("postgresql://"):
+            value = value.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return value
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value: object) -> object:
+        """Accept a comma-separated list, which is what a dashboard field gives."""
+        if isinstance(value, str) and not value.strip().startswith("["):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
 
 
 @lru_cache

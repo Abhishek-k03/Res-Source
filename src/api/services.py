@@ -38,6 +38,7 @@ def graph_config(collection: Collection, **overrides: Any) -> RunnableConfig:
         "collection_id": collection.slug,
         "embedding_model": collection.embedding_model,
         "research_domain": collection.research_domain,
+        "retriever_provider": get_settings().retriever_provider,
     }
     configurable.update(overrides)
     return RunnableConfig(configurable=configurable)
